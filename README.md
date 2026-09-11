@@ -139,7 +139,9 @@ terragrunt stack run -- apply
 ## High availability
 
 `controller_num_units > 1` enables HA via a `local-exec` provisioner. Set
-`path_juju_binary` if the Juju CLI is not at the default path.
+`path_juju_binary` if the Juju CLI is not at the default path. When using Juju
+4 or later, the HA wait step polls `juju status --format=json` and requires
+`jq` to evaluate controller unit readiness.
 
 ## Notes
 
