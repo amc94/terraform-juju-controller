@@ -27,11 +27,26 @@ resource "terraform_data" "juju_enable_ha" {
   count = var.controller_num_units > 1 ? 1 : 0
   provisioner "local-exec" {
     command = <<-EOT
-      echo "$JUJU_PASSWORD" | juju login -c "$CONTROLLER_NAME" "$JUJU_CONTROLLER" -u "$JUJU_USERNAME" --trust --no-prompt
-      juju enable-ha -c "$CONTROLLER_NAME" -n "$HA_COUNT"
-      juju wait-for model "$CONTROLLER_NAME":controller --timeout 3600s --query='forEach(units, unit => (unit.workload-status == "active"))'
+      set -eu
+
+      JUJU_MAJOR_VERSION=$("$JUJU_BINARY" version | sed -n 's/^\([0-9][0-9]*\)\..*/\1/p')
+      if [ -z "$JUJU_MAJOR_VERSION" ]; then
+        echo "Unable to determine Juju major version." >&2
+        exit 1
+      fi
+
+      echo "$JUJU_PASSWORD" | "$JUJU_BINARY" login -c "$CONTROLLER_NAME" "$JUJU_CONTROLLER" -u "$JUJU_USERNAME" --trust --no-prompt
+
+      if [ "$JUJU_MAJOR_VERSION" -ge 4 ]; then
+        "$JUJU_BINARY" add-unit -m "$CONTROLLER_NAME":controller controller -n "$((HA_COUNT - 1))"
+      else
+        "$JUJU_BINARY" enable-ha -c "$CONTROLLER_NAME" -n "$HA_COUNT"
+      fi
+
+      "$JUJU_BINARY" wait-for model "$CONTROLLER_NAME":controller --timeout 3600s --query='forEach(units, unit => (unit.workload-status == "active"))'
     EOT
     environment = {
+      JUJU_BINARY     = var.path_juju_binary
       CONTROLLER_NAME = juju_controller.controller.name
       JUJU_CONTROLLER = juju_controller.controller.api_addresses[0]
       JUJU_USERNAME   = juju_controller.controller.username
