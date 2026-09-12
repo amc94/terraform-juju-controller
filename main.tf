@@ -29,11 +29,13 @@ resource "juju_controller" "controller" {
 }
 
 action "juju_enable_ha" "ha" {
+  count = var.controller_num_units > 1 ? 1 : 0
+
   config {
-    api_addresses = juju_controller.controller.api_addresses
-    ca_cert       = juju_controller.controller.ca_cert
-    username      = juju_controller.controller.username
-    password      = juju_controller.controller.password
+    api_addresses = caller.api_addresses
+    ca_cert       = caller.ca_cert
+    username      = caller.username
+    password      = caller.password
     units         = var.controller_num_units
   }
 }
