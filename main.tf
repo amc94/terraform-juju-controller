@@ -22,15 +22,14 @@ resource "juju_controller" "controller" {
 
   lifecycle {
     action_trigger {
-      events  = [after_create]
-      actions = [action.juju_enable_ha.ha]
+      events    = [after_create]
+      condition = var.controller_num_units > 1
+      actions   = [action.juju_enable_ha.ha]
     }
   }
 }
 
 action "juju_enable_ha" "ha" {
-  count = var.controller_num_units > 1 ? 1 : 0
-
   config {
     api_addresses = caller.api_addresses
     ca_cert       = caller.ca_cert
