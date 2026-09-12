@@ -138,13 +138,8 @@ terragrunt stack run -- apply
 
 ## High availability
 
-`controller_num_units > 1` enables HA via a `local-exec` provisioner. Set
-`path_juju_binary` if the Juju CLI is not at the default path. When using Juju
-4 or later, the HA wait step polls `juju status --format=json` and requires
-`jq` to evaluate controller unit readiness.
+`controller_num_units > 1` enables HA via the `juju_enable_ha` action triggered during bootstrap.
 
 ## Notes
 
-- HA enablement is implemented with `terraform_data` + `local-exec` and Juju CLI commands
-  as opposed to Terraform actions to ensure compatibility with OpenTofu, as actions are
-  not yet supported. See <https://github.com/opentofu/opentofu/issues/3309>.
+- HA enablement relies on Terraform actions (`action.juju_enable_ha`), which requires Terraform 1.14 or later. See <https://canonical.com/juju/docs/terraform-provider-juju/latest/howto/manage-controllers/#enable-controller-high-availability>.
