@@ -138,8 +138,11 @@ terragrunt stack run -- apply
 
 ## High availability
 
-`controller_num_units > 1` enables HA via the `juju_enable_ha` action triggered during bootstrap.
+`controller_num_units > 1` enables HA:
+- For Juju 3: uses the native `action.juju_enable_ha` provider action during bootstrap.
+- For Juju 4+: uses a `local-exec` provisioner script that adds units and polls `juju status --format=json` (requires `jq`).
 
 ## Notes
 
-- HA enablement relies on Terraform actions (`action.juju_enable_ha`), which requires Terraform 1.14 or later. See <https://canonical.com/juju/docs/terraform-provider-juju/latest/howto/manage-controllers/#enable-controller-high-availability>.
+- HA enablement for Juju 3 uses Terraform actions (`action.juju_enable_ha`), which requires Terraform 1.14 or later. See <https://canonical.com/juju/docs/terraform-provider-juju/latest/howto/manage-controllers/#enable-controller-high-availability>.
+- The Juju CLI version is inspected pre-bootstrap via an `external` data source to select the appropriate HA enablement strategy and record the major version into Terraform state.
